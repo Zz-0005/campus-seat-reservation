@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import json
 import socket
+import struct
 import subprocess
 import sys
 import tempfile
@@ -118,6 +119,11 @@ def main() -> int:
         check("首页可访问且含标题", status == 200 and "校园自习座位预约系统" in page)
         status, _ = call(base, "/app.js")
         check("静态资源 app.js 可访问", status == 200, str(status))
+        status, _ = call(base, "/favicon.ico")
+        check("favicon.ico 不再 404（Issue #5）", status == 200, str(status))
+        status, _ = call(base, "/favicon.svg")
+        check("favicon.svg 可访问", status == 200, str(status))
+        check("首页声明了页面图标", 'rel="icon"' in page)
         status, _ = call(base, "/../server.py")
         check("禁止目录穿越", status in (403, 404), str(status))
 
@@ -241,6 +247,20 @@ def main() -> int:
         check("列表里能区分状态",
               all(r["status"] in ("upcoming", "ongoing", "finished", "cancelled")
                   for r in mine["reservations"]))
+
+        print("\n[8] 客户端异常断开")
+        # 发出半截请求后强制 RST，模拟用户直接关页面 / 切网络（Issue #4）
+        for _ in range(2):
+            sock = socket.create_connection(("127.0.0.1", port), timeout=3)
+            sock.sendall(b"GET / HTTP/1.1\r\nHost: 127.0.0.1\r\n")
+            time.sleep(0.1)
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, struct.pack("ii", 1, 0))
+            sock.close()
+        time.sleep(0.5)
+        status, health = call(base, "/api/health")
+        check("异常断开后服务仍然可用", status == 200 and health.get("ok") is True, str(status))
+        status, seats_after = call(base, "/api/rooms/%d/seats?date=%s" % (room["id"], tomorrow))
+        check("异常断开后数据仍然可读", status == 200 and len(seats_after["seats"]) > 0, str(status))
 
         total = len(PASSED) + len(FAILED)
         print("\n" + "=" * 56)
