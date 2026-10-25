@@ -1,0 +1,10 @@
+# 统一换行，避免 Windows / macOS 协作时整文件被判定为改动
+* text=auto eol=lf
+
+# 二进制文件不做换行转换
+*.docx binary
+*.pdf binary
+*.png binary
+*.ico binary
+
+*.bat text eol=crlf
