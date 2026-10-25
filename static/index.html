@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>校园自习座位预约系统</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">座</span>
+      <div>
+        <h1>校园自习座位预约系统</h1>
+        <p class="brand-sub">选座位 · 选时段 · 到点就来</p>
+      </div>
+    </div>
+    <div class="identity">
+      <div class="identity-info">
+        <span class="identity-name" id="userNameLabel">未设置身份</span>
+        <span class="identity-id" id="userIdLabel">请先填写学号</span>
+      </div>
+      <button class="btn btn-ghost" id="btnSwitchUser">切换身份</button>
+    </div>
+  </header>
+
+  <section class="toolbar">
+    <div class="toolbar-row">
+      <span class="toolbar-label">自习室</span>
+      <div class="room-tabs" id="roomTabs"></div>
+    </div>
+    <div class="toolbar-row">
+      <span class="toolbar-label">日期</span>
+      <div class="date-chips" id="dateChips"></div>
+    </div>
+  </section>
+
+  <main class="layout">
+    <section class="card seat-card">
+      <div class="card-head">
+        <div>
+          <h2 id="roomTitle">自习室</h2>
+          <p class="muted" id="roomMeta">正在加载…</p>
+        </div>
+        <div class="legend" id="legend">
+          <span class="legend-item"><i class="dot free"></i>空闲</span>
+          <span class="legend-item"><i class="dot partial"></i>部分可约</span>
+          <span class="legend-item"><i class="dot full"></i>已约满</span>
+          <span class="legend-item"><i class="dot mine"></i>我的预约</span>
+          <span class="legend-item"><i class="dot closed"></i>不可约</span>
+        </div>
+      </div>
+      <div class="podium">讲台 / 入口方向</div>
+      <div class="seat-map" id="seatMap"></div>
+      <p class="muted hint" id="seatHint">点击座位查看它的时段，绿色为空闲、红色为已预约。</p>
+    </section>
+
+    <aside class="side">
+      <section class="card" id="bookingCard">
+        <div class="card-head">
+          <h2 id="bookingTitle">选择一个座位</h2>
+        </div>
+        <div id="bookingBody" class="booking-body">
+          <p class="muted">在左侧座位图中点一个空闲座位，这里会显示它当天的可约时段。</p>
+        </div>
+      </section>
+
+      <section class="card" id="myCard">
+        <div class="card-head">
+          <h2>我的预约</h2>
+          <span class="badge-count" id="myCount">0</span>
+        </div>
+        <div id="myList" class="my-list">
+          <p class="muted">暂无预约</p>
+        </div>
+      </section>
+    </aside>
+  </main>
+
+  <div class="modal" id="userModal" hidden>
+    <div class="modal-box">
+      <h2>填写你的身份</h2>
+      <p class="muted">用于区分不同人的预约，本系统为本地演示，不做密码校验。</p>
+      <label class="field">
+        <span>学号</span>
+        <input id="inputUserId" maxlength="20" placeholder="例如 2024001" autocomplete="off" />
+      </label>
+      <label class="field">
+        <span>姓名</span>
+        <input id="inputUserName" maxlength="20" placeholder="例如 李明" autocomplete="off" />
+      </label>
+      <p class="form-error" id="userError" hidden></p>
+      <div class="modal-actions">
+        <button class="btn btn-primary" id="btnSaveUser">进入系统</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" hidden></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
