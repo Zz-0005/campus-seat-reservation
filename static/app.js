@@ -168,7 +168,7 @@
     const map = $('seatMap');
     const room = state.room;
     if (!room) return;
-    map.style.gridTemplateColumns = `repeat(${room.room.cols}, minmax(64px, 92px))`;
+    map.style.gridTemplateColumns = `repeat(${room.room.cols}, minmax(0, 1fr))`;
     map.innerHTML = '';
 
     state.seats.forEach((seat) => {
@@ -502,6 +502,21 @@
     await Promise.all([loadRoom(), loadReservations()]);
   }
 
+  // 页面不可见时暂停轮询，避免后台标签页持续空转（Issue #3）
+  function startPolling() {
+    stopPolling();
+    state.pollTimer = setInterval(() => {
+      if (!document.hidden) refreshAll();
+    }, POLL_MS);
+  }
+
+  function stopPolling() {
+    if (state.pollTimer !== null) {
+      clearInterval(state.pollTimer);
+      state.pollTimer = null;
+    }
+  }
+
   // ---------- 预约与取消 ----------
   async function book() {
     const seat = selectedSeat();
@@ -575,9 +590,14 @@
       if (e.key === 'Enter') submitUser();
     });
 
-    state.pollTimer = setInterval(refreshAll, POLL_MS);
+    startPolling();
     document.addEventListener('visibilitychange', () => {
-      if (!document.hidden) refreshAll();
+      if (document.hidden) {
+        stopPolling();
+      } else {
+        refreshAll();
+        startPolling();
+      }
     });
   }
 

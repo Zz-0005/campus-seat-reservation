@@ -180,16 +180,19 @@ h2 { font-size: 16px; }
 
 .seat-map {
   display: grid;
-  gap: 10px;
-  justify-content: center;
+  gap: clamp(4px, 1vw, 10px);
+  width: 100%;
+  max-width: 780px;
+  margin: 0 auto;
 }
 
 .seat {
   position: relative;
+  min-width: 0;
   border-radius: 12px;
   border: 1px solid var(--line);
   background: #fff;
-  padding: 10px 4px 8px;
+  padding: clamp(5px, 1.4vw, 10px) 2px;
   cursor: pointer;
   font: inherit;
   font-size: 13px;
@@ -201,8 +204,8 @@ h2 { font-size: 16px; }
   transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
 }
 .seat:hover { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(27, 36, 52, 0.12); }
-.seat .seat-label { font-weight: 600; letter-spacing: 0.4px; }
-.seat .seat-kind { font-size: 10px; color: var(--ink-soft); min-height: 14px; }
+.seat .seat-label { font-weight: 600; letter-spacing: 0.2px; font-size: clamp(10px, 2.2vw, 13px); }
+.seat .seat-kind { font-size: clamp(8px, 1.8vw, 10px); color: var(--ink-soft); min-height: 14px; }
 
 .seat.free { background: var(--free-bg); border-color: #b7e4c4; }
 .seat.partial { background: var(--partial-bg); border-color: #f2d29b; }
@@ -227,6 +230,16 @@ h2 { font-size: 16px; }
 }
 
 .hint { margin-top: 14px; text-align: center; }
+
+/* 窄屏（手机）：座位只留编号，压缩留白，保证一行能排下所有列 */
+@media (max-width: 560px) {
+  .card { padding: 14px 12px 16px; }
+  .seat-card { overflow: hidden; }
+  .seat { border-radius: 9px; }
+  .seat .seat-kind { display: none; }
+  .legend { gap: 8px; font-size: 11px; }
+  .podium { font-size: 11px; padding: 5px; }
+}
 
 /* ---------- 预约面板 ---------- */
 .booking-body { display: flex; flex-direction: column; gap: 12px; }

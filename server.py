@@ -661,7 +661,13 @@ class SeatHandler(BaseHTTPRequestHandler):
         return data
 
     def serve_static(self, path: str):
-        rel = "index.html" if path in ("/", "") else path.lstrip("/")
+        if path in ("/", ""):
+            rel = "index.html"
+        elif path == "/favicon.ico":
+            # 浏览器默认会请求 /favicon.ico，直接复用自带图标，避免控制台 404
+            rel = "favicon.svg"
+        else:
+            rel = path.lstrip("/")
         target = (STATIC_DIR / rel).resolve()
         if STATIC_DIR.resolve() not in target.parents and target != STATIC_DIR.resolve():
             self._send_error_json(404, "文件不存在", "NOT_FOUND")
@@ -714,7 +720,12 @@ class SeatHandler(BaseHTTPRequestHandler):
             raise ApiError(404, "接口不存在", "NOT_FOUND")
         except ApiError as exc:
             self._send_error_json(exc.status, exc.message, exc.code, exc.extra)
+        except (ConnectionResetError, ConnectionAbortedError, BrokenPipeError):
+            # 客户端提前断开（关页面 / 切网络 / 刷新），不必回写也不再记一条 500
+            pass
         except Exception as exc:                      # noqa: BLE001 - 兜底，避免连接悬挂
+            if os.environ.get("APP_DEBUG"):
+                sys.stderr.write("DEBUG 未预期异常 %s: %r\n" % (type(exc).__name__, exc))
             self._send_error_json(500, "服务器内部错误：%s" % exc, "INTERNAL")
 
     def do_POST(self):
@@ -741,8 +752,27 @@ class SeatHandler(BaseHTTPRequestHandler):
             raise ApiError(404, "接口不存在", "NOT_FOUND")
         except ApiError as exc:
             self._send_error_json(exc.status, exc.message, exc.code, exc.extra)
+        except (ConnectionResetError, ConnectionAbortedError, BrokenPipeError):
+            # 客户端提前断开（关页面 / 切网络 / 刷新），不必回写也不再记一条 500
+            pass
         except Exception as exc:                      # noqa: BLE001
+            if os.environ.get("APP_DEBUG"):
+                sys.stderr.write("DEBUG 未预期异常 %s: %r\n" % (type(exc).__name__, exc))
             self._send_error_json(500, "服务器内部错误：%s" % exc, "INTERNAL")
+
+
+class SeatServer(ThreadingHTTPServer):
+    """连接断开是常态（用户关页面、切网络），不打印整段堆栈吓到使用者。"""
+
+    daemon_threads = True
+
+    def handle_error(self, request, client_address):
+        exc = sys.exc_info()[1]
+        if isinstance(exc, (ConnectionResetError, ConnectionAbortedError, BrokenPipeError)):
+            sys.stderr.write("[%s] 客户端已断开连接：%s\n" % (
+                datetime.now().strftime("%H:%M:%S"), client_address[0]))
+            return
+        super().handle_error(request, client_address)
 
 
 def main(argv=None) -> int:
@@ -756,8 +786,7 @@ def main(argv=None) -> int:
     DB_PATH = Path(args.db).expanduser().resolve()
     init_db(DB_PATH)
 
-    server = ThreadingHTTPServer((args.host, args.port), SeatHandler)
-    server.daemon_threads = True
+    server = SeatServer((args.host, args.port), SeatHandler)
     print("校园自习座位预约系统已启动")
     print("  访问地址： http://%s:%d" % (args.host, args.port))
     print("  数据库：   %s" % DB_PATH)
