@@ -9,6 +9,29 @@
 
 ---
 
+## 界面
+
+| 桌面端：选座与时段区间 | 桌面端：我的预约 |
+| --- | --- |
+| ![选座与时段选择](docs/images/shot-desktop-booking.png) | ![我的预约](docs/images/shot-desktop-mine.png) |
+
+手机端（390px 宽，v1.1.0 起可用）：
+
+![手机端](docs/images/shot-mobile.png)
+
+---
+
+## 文档
+
+| 文档 | 内容 |
+| --- | --- |
+| [PRD（V1.1）](docs/PRD-校园自习座位预约系统.md) | 背景、目标、功能需求与验收标准、数据模型、接口设计、测试用例、迭代记录 |
+| [演示脚本](docs/DEMO-演示脚本.md) | 8 分钟现场演示的分镜、话术与兜底方案 |
+| [面试问答](docs/面试问答-基于本项目.md) | 用本项目回答常见面试题，每条附证据位置 |
+| [CONTRIBUTING](CONTRIBUTING.md) | 分支模型、提交规范与 Issue 处理流程 |
+
+---
+
 ## 功能对照
 
 | 需求 | 实现方式 |
@@ -85,6 +108,14 @@ python tests/test_booking.py
 3. 两个窗口都选中同一个座位、同一个时段，几乎同时点"确认预约"。
 4. 结果：一个提示"预约成功"，另一个提示"该时段已被他人预约，请换一个时段或座位"，座位变红且只属于一个人。
 
+也可以直接用脚本验证（绕过界面直接打接口，服务端先在跑）：
+
+```bash
+python tools/race_demo.py --threads 16
+```
+
+输出会打印每个请求的状态码，并以「成功 1 个、冲突被拒 15 个」收尾。
+
 ---
 
 ## 目录结构
@@ -96,13 +127,19 @@ python tests/test_booking.py
 ├── static/
 │   ├── index.html         # 页面骨架
 │   ├── style.css          # 样式（座位颜色、宫格布局、响应式）
-│   └── app.js             # 前端逻辑（状态管理、时段选择、5 秒轮询）
+│   ├── app.js             # 前端逻辑（状态管理、时段选择、自动刷新）
+│   └── favicon.svg        # 页面图标
 ├── tests/
 │   └── test_booking.py    # 端到端自测（含并发抢座）
-├── docs/                  # 产品需求文档（PRD）：Markdown / Word / PDF
+├── docs/
+│   ├── PRD-校园自习座位预约系统.md/.docx/.pdf   # 产品需求文档（V1.1）
+│   ├── DEMO-演示脚本.md                          # 8 分钟现场演示流程与话术
+│   ├── 面试问答-基于本项目.md                     # 常见面试题的项目化回答
+│   └── images/                                   # 界面截图（演示与 README 使用）
 ├── tools/
 │   ├── build_prd_docx.py  # 由 PRD 的 Markdown 生成排版好的 Word
-│   └── verify_prd_docs.py # 校验两份 PRD 的结构与内容一致
+│   ├── verify_prd_docs.py # 校验两份 PRD 的结构与内容一致
+│   └── race_demo.py       # 并发抢座演示：多线程同时抢同一座位，打印结果
 ├── data/                  # 运行时生成，存放 seats.db（已在 .gitignore 中忽略）
 └── README.md
 ```
